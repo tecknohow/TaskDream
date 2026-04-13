@@ -1,166 +1,180 @@
 <template>
-  <div class="github-integration">
-    <div class="page-header">
-      <h1>GitHub Integration</h1>
-      <p class="text-secondary">Connect your GitHub account to sync issues and pull requests as tasks.</p>
-    </div>
+	<div class="github-integration">
+		<div class="page-header">
+			<h1>GitHub Integration</h1>
+			<p class="text-secondary">Connect your GitHub account to sync issues and pull requests as tasks.</p>
+		</div>
 
-    <!-- Connection Status -->
-    <div class="card connection-card">
-      <div class="card-header">
-        <h2>Connection</h2>
-        <span
-          class="connection-status"
-          :class="integration.connected ? 'connected' : 'disconnected'"
-        >
-          {{ integration.connected ? 'Connected' : 'Not Connected' }}
-        </span>
-      </div>
+		<!-- Connection Status -->
+		<div class="card connection-card">
+			<div class="card-header">
+				<h2>Connection</h2>
+				<span
+					class="connection-status"
+					:class="integration.connected ? 'connected' : 'disconnected'"
+				>
+					{{ integration.connected ? 'Connected' : 'Not Connected' }}
+				</span>
+			</div>
 
-      <div v-if="integration.connected" class="connected-info">
-        <div class="user-card">
-          <img
-            v-if="integration.avatar_url"
-            :src="integration.avatar_url"
-            class="github-avatar"
-            alt="GitHub Avatar"
-          />
-          <div class="github-user-info">
-            <div class="github-username">{{ integration.username }}</div>
-            <div class="github-sync-time text-xs text-tertiary">
-              Last synced: {{ integration.last_synced_at ? formatDate(integration.last_synced_at) : 'Never' }}
-            </div>
-          </div>
-          <button class="btn btn-danger btn-sm" @click="disconnect">Disconnect</button>
-        </div>
-      </div>
+			<div v-if="integration.connected" class="connected-info">
+				<div class="user-card">
+					<img
+						v-if="integration.avatarUrl"
+						:src="integration.avatarUrl"
+						class="github-avatar"
+						alt="GitHub Avatar"
+					/>
+					<div class="github-user-info">
+						<div class="github-username">{{ integration.username }}</div>
+						<div class="github-sync-time text-xs text-tertiary">
+							Last synced: {{ integration.lastSyncedAt ? formatDate(integration.lastSyncedAt) : 'Never' }}
+						</div>
+					</div>
+					<button class="btn btn-danger btn-sm" @click="disconnect">Disconnect</button>
+				</div>
+			</div>
 
-      <div v-else class="connect-form">
-        <p class="text-sm text-secondary">
-          Enter a GitHub Personal Access Token to connect your account.
-          The token needs <code>repo</code> scope to sync issues and PRs.
-        </p>
-        <div class="form-group">
-          <label>Personal Access Token</label>
-          <input
-            v-model="accessToken"
-            type="password"
-            placeholder="ghp_xxxxxxxxxxxxxxxxxxxx"
-          />
-        </div>
-        <div class="form-group">
-          <label>GitHub Username</label>
-          <input
-            v-model="username"
-            type="text"
-            placeholder="your-username"
-          />
-        </div>
-        <button class="btn btn-primary" @click="connect" :disabled="!accessToken || loading">
-          {{ loading ? 'Connecting...' : 'Connect GitHub' }}
-        </button>
-      </div>
-    </div>
+			<div v-else class="connect-form">
+				<p class="text-sm text-secondary">
+					Enter a GitHub Personal Access Token to connect your account.
+					The token needs <code>repo</code> scope to sync issues and PRs.
+				</p>
+				<div class="form-group">
+					<label>Personal Access Token</label>
+					<input
+						v-model="accessToken"
+						type="password"
+						placeholder="ghp_xxxxxxxxxxxxxxxxxxxx"
+					/>
+				</div>
+				<div class="form-group">
+					<label>GitHub Username</label>
+					<input
+						v-model="username"
+						type="text"
+						placeholder="your-username"
+					/>
+				</div>
+				<button class="btn btn-primary" @click="connect" :disabled="!accessToken || loading">
+					{{ loading ? 'Connecting...' : 'Connect GitHub' }}
+				</button>
+			</div>
+		</div>
 
-    <!-- Repository Tracking -->
-    <div class="card" v-if="integration.connected">
-      <div class="card-header">
-        <h2>Tracked Repositories</h2>
-        <button class="btn btn-ghost btn-sm" @click="showAddRepo = true">+ Add Repo</button>
-      </div>
+		<!-- Repository Tracking -->
+		<div v-if="integration.connected" class="card">
+			<div class="card-header">
+				<h2>Tracked Repositories</h2>
+				<button class="btn btn-ghost btn-sm" @click="showAddRepo = true">+ Add Repo</button>
+			</div>
 
-      <div class="repo-list">
-        <div v-for="(repo, index) in repos" :key="repo.full_name" class="repo-item">
-          <div class="repo-info">
-            <div class="repo-name">{{ repo.full_name }}</div>
-            <div class="repo-options">
-              <label class="option-toggle">
-                <input type="checkbox" v-model="repo.sync_issues" @change="saveRepos" />
-                <span>Issues</span>
-              </label>
-              <label class="option-toggle">
-                <input type="checkbox" v-model="repo.sync_prs" @change="saveRepos" />
-                <span>PRs</span>
-              </label>
-            </div>
-          </div>
-          <div class="repo-project">
-            <select v-model.number="repo.project_id" @change="saveRepos" class="project-select">
-              <option :value="0">No Project</option>
-              <option
-                v-for="project in projectsStore.activeProjects"
-                :key="project.id"
-                :value="project.id"
-              >
-                {{ project.title }}
-              </option>
-            </select>
-            <button class="btn btn-ghost btn-sm" @click="removeRepo(index)">Remove</button>
-          </div>
-        </div>
+			<div class="repo-list">
+				<div v-for="(repo, index) in repos" :key="repo.fullName" class="repo-item">
+					<div class="repo-info">
+						<div class="repo-name">{{ repo.fullName }}</div>
+						<div class="repo-options">
+							<label class="option-toggle">
+								<input type="checkbox" v-model="repo.syncIssues" @change="saveRepos" />
+								<span>Issues</span>
+							</label>
+							<label class="option-toggle">
+								<input type="checkbox" v-model="repo.syncPrs" @change="saveRepos" />
+								<span>PRs</span>
+							</label>
+						</div>
+					</div>
+					<div class="repo-project">
+						<button class="btn btn-ghost btn-sm" @click="removeRepo(index)">Remove</button>
+					</div>
+				</div>
 
-        <div v-if="repos.length === 0" class="empty-state">
-          No repositories tracked. Add a repository to start syncing.
-        </div>
-      </div>
-    </div>
+				<div v-if="repos.length === 0" class="empty-state">
+					No repositories tracked. Add a repository to start syncing.
+				</div>
+			</div>
+		</div>
 
-    <!-- Add Repo Dialog -->
-    <Teleport to="body" v-if="showAddRepo">
-      <div class="modal-overlay" @click.self="showAddRepo = false">
-        <div class="modal">
-          <h2>Add Repository</h2>
-          <div class="form-group">
-            <label>Repository (owner/name)</label>
-            <input
-              v-model="newRepoName"
-              type="text"
-              placeholder="e.g. octocat/hello-world"
-            />
-          </div>
-          <div class="form-actions">
-            <button class="btn btn-ghost" @click="showAddRepo = false">Cancel</button>
-            <button class="btn btn-primary" @click="addRepo" :disabled="!newRepoName">Add</button>
-          </div>
-        </div>
-      </div>
-    </Teleport>
+		<!-- Add Repo Dialog -->
+		<Teleport to="body">
+			<div v-if="showAddRepo" class="modal-overlay" @click.self="showAddRepo = false">
+				<div class="modal">
+					<h2>Add Repository</h2>
+					<div class="form-group">
+						<label>Repository (owner/name)</label>
+						<input
+							v-model="newRepoName"
+							type="text"
+							placeholder="e.g. octocat/hello-world"
+						/>
+					</div>
+					<div class="form-actions">
+						<button class="btn btn-ghost" @click="showAddRepo = false">Cancel</button>
+						<button class="btn btn-primary" @click="addRepo" :disabled="!newRepoName">Add</button>
+					</div>
+				</div>
+			</div>
+		</Teleport>
 
-    <!-- Synced Issues -->
-    <div class="card" v-if="integration.connected && issueSyncs.length > 0">
-      <div class="card-header">
-        <h2>Synced Issues</h2>
-      </div>
-      <div class="issue-list">
-        <div v-for="sync in issueSyncs" :key="sync.id" class="issue-item">
-          <span class="issue-state" :class="sync.issue_state">
-            {{ sync.issue_state === 'open' ? 'O' : 'C' }}
-          </span>
-          <div class="issue-info">
-            <div class="issue-title">
-              {{ sync.issue_title }}
-              <span class="issue-number">#{{ sync.issue_number }}</span>
-            </div>
-            <div class="issue-repo text-xs text-tertiary">
-              {{ sync.repo_full_name }}
-              {{ sync.is_pull_request ? '(PR)' : '' }}
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
+		<!-- Synced Issues -->
+		<div v-if="integration.connected && issueSyncs.length > 0" class="card">
+			<div class="card-header">
+				<h2>Synced Issues</h2>
+			</div>
+			<div class="issue-list">
+				<div v-for="sync in issueSyncs" :key="sync.id" class="issue-item">
+					<span class="issue-state" :class="sync.issueState">
+						{{ sync.issueState === 'open' ? 'O' : 'C' }}
+					</span>
+					<div class="issue-info">
+						<div class="issue-title">
+							{{ sync.issueTitle }}
+							<span class="issue-number">#{{ sync.issueNumber }}</span>
+						</div>
+						<div class="issue-repo text-xs text-tertiary">
+							{{ sync.repoFullName }}
+							{{ sync.isPullRequest ? '(PR)' : '' }}
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
 </template>
 
-<script setup lang="ts">
-import { ref, onMounted } from 'vue'
-import { githubAPI } from '@/api/github'
-import { useProjectsStore } from '@/stores/projects'
-import type { GithubIntegration, RepoConfig, GithubIssueSync } from '@/types/models'
+<script lang="ts" setup>
+import {ref, onMounted} from 'vue'
 
-const projectsStore = useProjectsStore()
+import {AuthenticatedHTTPFactory} from '@/helpers/fetcher'
 
-const integration = ref<GithubIntegration>({ connected: false })
+interface GithubIntegrationData {
+	connected: boolean
+	username?: string
+	avatarUrl?: string
+	lastSyncedAt?: string
+}
+
+interface RepoConfig {
+	owner: string
+	name: string
+	fullName: string
+	projectId: number
+	syncIssues: boolean
+	syncPrs: boolean
+}
+
+interface GithubIssueSync {
+	id: number
+	issueTitle: string
+	issueNumber: number
+	issueState: string
+	repoFullName: string
+	isPullRequest: boolean
+}
+
+const http = AuthenticatedHTTPFactory()
+
+const integration = ref<GithubIntegrationData>({connected: false})
 const repos = ref<RepoConfig[]>([])
 const issueSyncs = ref<GithubIssueSync[]>([])
 const loading = ref(false)
@@ -170,265 +184,289 @@ const showAddRepo = ref(false)
 const newRepoName = ref('')
 
 onMounted(async () => {
-  await projectsStore.fetchAll()
-  await fetchIntegration()
+	await fetchIntegration()
 })
 
-const fetchIntegration = async () => {
-  try {
-    const resp = await githubAPI.getIntegration()
-    integration.value = resp.data
-    repos.value = resp.data.repos || []
+async function fetchIntegration() {
+	try {
+		const resp = await http.get('/integrations/github')
+		integration.value = resp.data
+		repos.value = resp.data.repos || []
 
-    if (integration.value.connected) {
-      const issuesResp = await githubAPI.getIssueSyncs()
-      issueSyncs.value = issuesResp.data
-    }
-  } catch {
-    // Not connected
-  }
+		if (integration.value.connected) {
+			const issuesResp = await http.get('/integrations/github/issues')
+			issueSyncs.value = issuesResp.data || []
+		}
+	} catch {
+		// Not connected
+	}
 }
 
-const connect = async () => {
-  loading.value = true
-  try {
-    await githubAPI.saveIntegration({
-      access_token: accessToken.value,
-      username: username.value
-    })
-    await fetchIntegration()
-    accessToken.value = ''
-  } catch {
-    // Error handled
-  } finally {
-    loading.value = false
-  }
+async function connect() {
+	loading.value = true
+	try {
+		await http.put('/integrations/github', {
+			access_token: accessToken.value,
+			username: username.value,
+		})
+		await fetchIntegration()
+		accessToken.value = ''
+	} catch {
+		// Error handled
+	} finally {
+		loading.value = false
+	}
 }
 
-const disconnect = async () => {
-  try {
-    await githubAPI.deleteIntegration()
-    integration.value = { connected: false }
-    repos.value = []
-    issueSyncs.value = []
-  } catch {
-    // Error handled
-  }
+async function disconnect() {
+	try {
+		await http.delete('/integrations/github')
+		integration.value = {connected: false}
+		repos.value = []
+		issueSyncs.value = []
+	} catch {
+		// Error handled
+	}
 }
 
-const addRepo = () => {
-  const parts = newRepoName.value.split('/')
-  if (parts.length !== 2) return
+function addRepo() {
+	const parts = newRepoName.value.split('/')
+	if (parts.length !== 2) return
 
-  repos.value.push({
-    owner: parts[0],
-    name: parts[1],
-    full_name: newRepoName.value,
-    project_id: 0,
-    sync_issues: true,
-    sync_prs: false
-  })
-  saveRepos()
-  showAddRepo.value = false
-  newRepoName.value = ''
+	repos.value.push({
+		owner: parts[0],
+		name: parts[1],
+		fullName: newRepoName.value,
+		projectId: 0,
+		syncIssues: true,
+		syncPrs: false,
+	})
+	saveRepos()
+	showAddRepo.value = false
+	newRepoName.value = ''
 }
 
-const removeRepo = (index: number) => {
-  repos.value.splice(index, 1)
-  saveRepos()
+function removeRepo(index: number) {
+	repos.value.splice(index, 1)
+	saveRepos()
 }
 
-const saveRepos = async () => {
-  try {
-    await githubAPI.updateRepos(repos.value)
-  } catch {
-    // Error handled
-  }
+async function saveRepos() {
+	try {
+		await http.post('/integrations/github/repos', {repos: repos.value})
+	} catch {
+		// Error handled
+	}
 }
 
-const formatDate = (dateStr: string) => {
-  return new Date(dateStr).toLocaleDateString('en-US', {
-    month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
-  })
+function formatDate(dateStr: string) {
+	return new Date(dateStr).toLocaleDateString('en-US', {
+		month: 'short',
+		day: 'numeric',
+		hour: '2-digit',
+		minute: '2-digit',
+	})
 }
 </script>
 
 <style scoped lang="scss">
 .github-integration {
-  max-width: 800px;
-  margin: 0 auto;
+	max-width: 800px;
+	margin: 0 auto;
 }
 
 .page-header {
-  margin-bottom: var(--spacing-xl);
+	margin-bottom: 2rem;
 
-  h1 { margin-bottom: var(--spacing-xs); }
-  p { margin: 0; }
+	h1 { margin-bottom: .25rem; }
+	p { margin: 0; }
 }
 
 .card {
-  background-color: var(--bg-primary);
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-lg);
-  padding: var(--spacing-lg);
-  box-shadow: var(--shadow-sm);
-  margin-bottom: var(--spacing-lg);
+	background-color: var(--white);
+	border: 1px solid var(--grey-200);
+	border-radius: $radius;
+	padding: 1.5rem;
+	box-shadow: var(--shadow-sm);
+	margin-bottom: 1.5rem;
 }
 
 .card-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: var(--spacing-lg);
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	margin-bottom: 1.5rem;
 
-  h2 { margin: 0; font-size: var(--font-size-lg); }
+	h2 { margin: 0; font-size: 1.125rem; }
 }
 
 .connection-status {
-  padding: var(--spacing-xs) var(--spacing-md);
-  border-radius: var(--radius-sm);
-  font-size: var(--font-size-xs);
-  font-weight: 600;
+	padding: .25rem .75rem;
+	border-radius: $radius;
+	font-size: .75rem;
+	font-weight: 600;
 
-  &.connected { background: rgba(16, 185, 129, 0.1); color: var(--color-success); }
-  &.disconnected { background: rgba(156, 163, 175, 0.1); color: var(--text-tertiary); }
+	&.connected { background: rgba(16, 185, 129, 0.1); color: var(--success); }
+	&.disconnected { background: rgba(156, 163, 175, 0.1); color: var(--grey-500); }
 }
 
 .user-card {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-md);
+	display: flex;
+	align-items: center;
+	gap: .75rem;
 }
 
 .github-avatar {
-  width: 48px;
-  height: 48px;
-  border-radius: 50%;
+	width: 48px;
+	height: 48px;
+	border-radius: 50%;
 }
 
 .github-user-info { flex: 1; }
 
 .github-username {
-  font-weight: 600;
-  font-size: var(--font-size-lg);
+	font-weight: 600;
+	font-size: 1.125rem;
 }
 
 .connect-form {
-  p { margin-bottom: var(--spacing-lg); }
+	p { margin-bottom: 1.5rem; }
 }
 
 .form-group {
-  margin-bottom: var(--spacing-md);
+	margin-bottom: .75rem;
 
-  label {
-    display: block;
-    font-size: var(--font-size-sm);
-    font-weight: 500;
-    color: var(--text-secondary);
-    margin-bottom: var(--spacing-xs);
-  }
+	label {
+		display: block;
+		font-size: .875rem;
+		font-weight: 500;
+		color: var(--grey-500);
+		margin-bottom: .25rem;
+	}
 
-  input, select {
-    width: 100%;
-  }
+	input, select {
+		width: 100%;
+	}
 }
 
 .form-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: var(--spacing-md);
-  margin-top: var(--spacing-lg);
+	display: flex;
+	justify-content: flex-end;
+	gap: .75rem;
+	margin-top: 1rem;
 }
 
 .repo-list {
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-md);
+	display: flex;
+	flex-direction: column;
+	gap: .75rem;
 }
 
 .repo-item {
-  padding: var(--spacing-md);
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-md);
+	padding: .75rem;
+	border: 1px solid var(--grey-200);
+	border-radius: $radius;
 }
 
 .repo-info {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: var(--spacing-sm);
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	margin-bottom: .5rem;
 }
 
 .repo-name {
-  font-weight: 600;
+	font-weight: 600;
 }
 
 .repo-options {
-  display: flex;
-  gap: var(--spacing-md);
+	display: flex;
+	gap: .75rem;
 }
 
 .option-toggle {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-xs);
-  font-size: var(--font-size-sm);
-  cursor: pointer;
+	display: flex;
+	align-items: center;
+	gap: .25rem;
+	font-size: .875rem;
+	cursor: pointer;
 }
 
 .repo-project {
-  display: flex;
-  gap: var(--spacing-sm);
-  align-items: center;
-}
-
-.project-select {
-  flex: 1;
-  font-size: var(--font-size-sm);
+	display: flex;
+	gap: .5rem;
+	align-items: center;
+	justify-content: flex-end;
 }
 
 .issue-list {
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-sm);
+	display: flex;
+	flex-direction: column;
+	gap: .5rem;
 }
 
 .issue-item {
-  display: flex;
-  gap: var(--spacing-md);
-  padding: var(--spacing-sm) 0;
-  border-bottom: 1px solid var(--border-light);
+	display: flex;
+	gap: .75rem;
+	padding: .5rem 0;
+	border-bottom: 1px solid var(--grey-100);
 }
 
 .issue-state {
-  width: 20px;
-  height: 20px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 10px;
-  font-weight: 700;
-  flex-shrink: 0;
+	width: 20px;
+	height: 20px;
+	border-radius: 50%;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-size: 10px;
+	font-weight: 700;
+	flex-shrink: 0;
 
-  &.open { background: rgba(16, 185, 129, 0.15); color: var(--color-success); }
-  &.closed { background: rgba(139, 92, 246, 0.15); color: var(--color-secondary); }
+	&.open { background: rgba(16, 185, 129, 0.15); color: var(--success); }
+	&.closed { background: rgba(139, 92, 246, 0.15); color: var(--primary); }
 }
 
 .issue-title {
-  font-size: var(--font-size-sm);
-  font-weight: 500;
+	font-size: .875rem;
+	font-weight: 500;
 }
 
 .issue-number {
-  color: var(--text-tertiary);
-  font-weight: 400;
+	color: var(--grey-400);
+	font-weight: 400;
 }
 
 .empty-state {
-  text-align: center;
-  padding: var(--spacing-lg);
-  color: var(--text-tertiary);
-  font-size: var(--font-size-sm);
+	text-align: center;
+	padding: 1.5rem;
+	color: var(--grey-400);
+	font-size: .875rem;
+}
+
+.modal-overlay {
+	position: fixed;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	background-color: rgba(0, 0, 0, 0.5);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	z-index: 100;
+}
+
+.modal {
+	background-color: var(--white);
+	border-radius: $radius;
+	padding: 1.5rem;
+	width: 400px;
+	max-width: 90vw;
+	box-shadow: var(--shadow-lg);
+
+	h2 {
+		margin-bottom: 1rem;
+	}
 }
 </style>

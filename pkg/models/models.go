@@ -71,6 +71,12 @@ func GetTables() []interface{} {
 		&TaskUnreadStatus{},
 		&Session{},
 		&OAuthCode{},
+		&PomodoroSession{},
+		&PomodoroSettings{},
+		&GithubIntegration{},
+		&GithubIssueSync{},
+		&ActivityLog{},
+		&DailySummary{},
 	}
 }
 

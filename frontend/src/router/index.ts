@@ -409,6 +409,22 @@ const router = createRouter({
 			name: 'about',
 			component: () => import('@/views/About.vue'),
 		},
+		// TaskDream additions - Super Productivity features
+		{
+			path: '/focus',
+			name: 'focus',
+			component: () => import('@/views/FocusMode.vue'),
+		},
+		{
+			path: '/eisenhower',
+			name: 'eisenhower',
+			component: () => import('@/views/EisenhowerMatrix.vue'),
+		},
+		{
+			path: '/integrations/github',
+			name: 'integrations.github',
+			component: () => import('@/views/GithubIntegration.vue'),
+		},
 	],
 })
 

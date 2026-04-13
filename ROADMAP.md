@@ -1,51 +1,33 @@
 # TaskDream Roadmap
 
-## Phase 1 - MVP (Complete)
-- [x] Core task CRUD with priorities and due dates
-- [x] Project management
-- [x] Kanban board view with drag-and-drop
-- [x] User authentication (JWT)
-- [x] RESTful API
-- [x] SQLite and PostgreSQL support
-- [x] Docker deployment
-- [x] Task filtering and search
-- [x] Subtasks support
+TaskDream extends Vikunja with productivity features. Vikunja itself handles the core task/project management.
 
-## Phase 2 - Enhanced Productivity (Complete)
-- [x] Time tracking (Super Productivity inspired)
-- [x] Pomodoro timer with customizable settings
-- [x] Focus Mode for distraction-free work
+## Phase 1 - Foundation (Complete)
+- [x] Fork Vikunja as upstream mirror (private repo)
+- [x] All Vikunja features inherited (tasks, projects, kanban, labels, teams, CalDAV, sharing, etc.)
+
+## Phase 2 - Super Productivity Features (In Progress)
+- [x] Pomodoro timer model and settings
+- [x] Focus Mode view
 - [x] Eisenhower Matrix view (urgency/importance)
-- [x] Task estimation vs actual comparison
-- [x] Notes (Tududi inspired)
-- [x] Areas for project organization
-- [x] Calendar view
+- [x] GitHub integration model
+- [x] Activity log and daily summary models
 - [x] Quick Add task (Shift+A keyboard shortcut)
-- [x] Activity log and analytics
-- [x] Dashboard with productivity trends
-- [x] Dark mode with toggle (light/dark/auto)
-- [x] Global search across tasks, projects, notes
-- [x] Recurring tasks support
+- [ ] Pomodoro API endpoints
+- [ ] Analytics/dashboard stats API
+- [ ] Task estimation vs actual time comparison
+- [ ] GitHub issue sync worker
 
-## Phase 3 - Integrations (In Progress)
-- [x] GitHub integration (issues and PRs sync)
-- [ ] Offline-first / PWA support
-- [ ] CalDAV server for calendar sync
-- [ ] Import from Todoist, Trello, Jira
-- [ ] GitLab integration
-- [ ] Webhook support
-- [ ] API documentation (Swagger)
-
-## Phase 4 - Multi-Platform
-- [ ] Desktop app (Tauri)
-- [ ] Mobile app (Capacitor / native)
+## Phase 3 - Advanced Productivity
+- [ ] Flowtime timer (alternative to Pomodoro)
+- [ ] Daily/weekly planning workflow
+- [ ] Productivity reports and trends
+- [ ] GitLab/Jira integrations
+- [ ] Todoist/Trello import
 - [ ] Browser extension for quick capture
-- [ ] CLI tool
 
-## Phase 5 - Collaboration
-- [ ] Team workspaces
-- [ ] Project sharing and permissions
-- [ ] Real-time collaboration (WebSocket)
-- [ ] Comments and mentions
-- [ ] Email notifications
-- [ ] LDAP / OIDC authentication
+## Phase 4 - Platform
+- [ ] Desktop app (Tauri)
+- [ ] Mobile app
+- [ ] CLI tool
+- [ ] Offline-first / PWA enhancements
