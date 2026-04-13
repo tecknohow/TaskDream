@@ -1,48 +1,51 @@
 import client from './client'
-import type { Task } from '@/types/models'
+import type { Task, TaskWithSubtasks } from '@/types/models'
+
+export interface TaskFilters {
+  project_id?: number
+  status?: 'done' | 'undone'
+  priority?: number
+  sort?: 'priority' | 'due_date' | 'created' | 'position'
+  order?: 'asc' | 'desc'
+  filter?: 'overdue' | 'today' | 'upcoming' | 'no_date'
+}
 
 export const tasksAPI = {
-  getAll: (filters?: { projectId?: string; status?: string }) => {
+  getAll: (filters?: TaskFilters) => {
     return client.get<Task[]>('/tasks', { params: filters })
   },
 
-  getById: (id: string) => {
-    return client.get<Task>(`/tasks/${id}`)
+  getById: (id: number) => {
+    return client.get<TaskWithSubtasks>(`/tasks/${id}`)
   },
 
   create: (task: Partial<Task>) => {
     return client.post<Task>('/tasks', task)
   },
 
-  update: (id: string, task: Partial<Task>) => {
+  update: (id: number, task: Partial<Task>) => {
     return client.put<Task>(`/tasks/${id}`, task)
   },
 
-  delete: (id: string) => {
+  delete: (id: number) => {
     return client.delete(`/tasks/${id}`)
   },
 
-  getByProject: (projectId: string) => {
-    return client.get<Task[]>(`/projects/${projectId}/tasks`)
+  // Subtasks
+  getSubtasks: (taskId: number) => {
+    return client.get<Task[]>(`/tasks/${taskId}/subtasks`)
   },
 
-  updateStatus: (id: string, status: string) => {
-    return client.patch<Task>(`/tasks/${id}/status`, { status })
+  createSubtask: (taskId: number, subtask: Partial<Task>) => {
+    return client.post<Task>(`/tasks/${taskId}/subtasks`, subtask)
   },
 
-  updateOrder: (id: string, order: number, bucketId?: string) => {
-    return client.patch<Task>(`/tasks/${id}/order`, { order, bucketId })
+  // Time tracking for task
+  getTimeTracking: (taskId: number) => {
+    return client.get(`/tasks/${taskId}/time-tracking`)
   },
 
-  bulkUpdate: (ids: string[], updates: Partial<Task>) => {
-    return client.post<Task[]>('/tasks/bulk', { ids, updates })
-  },
-
-  getTodayTasks: () => {
-    return client.get<Task[]>('/tasks/today')
-  },
-
-  getOverdueTasks: () => {
-    return client.get<Task[]>('/tasks/overdue')
+  createTimeTracking: (taskId: number, entry: any) => {
+    return client.post(`/tasks/${taskId}/time-tracking`, entry)
   }
 }

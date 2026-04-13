@@ -10,7 +10,7 @@ export const useProjectsStore = defineStore('projects', () => {
   const selectedProject = ref<Project | null>(null)
 
   const activeProjects = computed(() => {
-    return projects.value.filter(p => !p.archived)
+    return projects.value.filter(p => !p.is_archived)
   })
 
   const fetchAll = async () => {
@@ -21,13 +21,13 @@ export const useProjectsStore = defineStore('projects', () => {
       const response = await projectsAPI.getAll()
       projects.value = response.data
     } catch (err: any) {
-      error.value = err.response?.data?.message || 'Failed to fetch projects'
+      error.value = err.response?.data?.error || 'Failed to fetch projects'
     } finally {
       loading.value = false
     }
   }
 
-  const fetchById = async (id: string) => {
+  const fetchById = async (id: number) => {
     loading.value = true
     error.value = null
 
@@ -42,7 +42,7 @@ export const useProjectsStore = defineStore('projects', () => {
       selectedProject.value = response.data
       return response.data
     } catch (err: any) {
-      error.value = err.response?.data?.message || 'Failed to fetch project'
+      error.value = err.response?.data?.error || 'Failed to fetch project'
     } finally {
       loading.value = false
     }
@@ -57,14 +57,14 @@ export const useProjectsStore = defineStore('projects', () => {
       projects.value.push(response.data)
       return response.data
     } catch (err: any) {
-      error.value = err.response?.data?.message || 'Failed to create project'
+      error.value = err.response?.data?.error || 'Failed to create project'
       throw error.value
     } finally {
       loading.value = false
     }
   }
 
-  const update = async (id: string, project: Partial<Project>) => {
+  const update = async (id: number, project: Partial<Project>) => {
     loading.value = true
     error.value = null
 
@@ -79,14 +79,14 @@ export const useProjectsStore = defineStore('projects', () => {
       }
       return response.data
     } catch (err: any) {
-      error.value = err.response?.data?.message || 'Failed to update project'
+      error.value = err.response?.data?.error || 'Failed to update project'
       throw error.value
     } finally {
       loading.value = false
     }
   }
 
-  const deleteProject = async (id: string) => {
+  const deleteProject = async (id: number) => {
     loading.value = true
     error.value = null
 
@@ -97,37 +97,10 @@ export const useProjectsStore = defineStore('projects', () => {
         selectedProject.value = null
       }
     } catch (err: any) {
-      error.value = err.response?.data?.message || 'Failed to delete project'
+      error.value = err.response?.data?.error || 'Failed to delete project'
       throw error.value
     } finally {
       loading.value = false
-    }
-  }
-
-  const fetchBuckets = async (projectId: string) => {
-    try {
-      const response = await projectsAPI.getBuckets(projectId)
-      const project = projects.value.find(p => p.id === projectId)
-      if (project) {
-        project.buckets = response.data
-      }
-      return response.data
-    } catch (err: any) {
-      error.value = err.response?.data?.message || 'Failed to fetch buckets'
-    }
-  }
-
-  const createBucket = async (projectId: string, bucket: Partial<Bucket>) => {
-    try {
-      const response = await projectsAPI.createBucket(projectId, bucket)
-      const project = projects.value.find(p => p.id === projectId)
-      if (project && project.buckets) {
-        project.buckets.push(response.data)
-      }
-      return response.data
-    } catch (err: any) {
-      error.value = err.response?.data?.message || 'Failed to create bucket'
-      throw error.value
     }
   }
 
@@ -146,8 +119,6 @@ export const useProjectsStore = defineStore('projects', () => {
     create,
     update,
     deleteProject,
-    fetchBuckets,
-    createBucket,
     selectProject
   }
 })

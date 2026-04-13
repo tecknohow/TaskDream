@@ -49,7 +49,7 @@ func LoadConfig() (*Config, error) {
 	viper.AddConfigPath(os.ExpandEnv("$HOME/.taskdream"))
 
 	// Set defaults
-	viper.SetDefault("server.port", 8080)
+	viper.SetDefault("server.port", 3456)
 	viper.SetDefault("server.host", "0.0.0.0")
 	viper.SetDefault("database.driver", "sqlite")
 	viper.SetDefault("database.sqlite.path", "./taskdream.db")

@@ -32,17 +32,17 @@ export const useAuthStore = defineStore('auth', () => {
 
     try {
       const response = await authAPI.login(credentials)
-      const { token: newToken, user: newUser } = response.data
+      const data = response.data
 
-      token.value = newToken
-      user.value = newUser
+      token.value = data.access_token
+      user.value = data.user
 
-      localStorage.setItem('token', newToken)
-      localStorage.setItem('user', JSON.stringify(newUser))
+      localStorage.setItem('token', data.access_token)
+      localStorage.setItem('user', JSON.stringify(data.user))
 
-      return response.data
+      return data
     } catch (err: any) {
-      error.value = err.response?.data?.message || 'Login failed'
+      error.value = err.response?.data?.error || 'Login failed'
       throw error.value
     } finally {
       loading.value = false
@@ -55,17 +55,17 @@ export const useAuthStore = defineStore('auth', () => {
 
     try {
       const response = await authAPI.register(data)
-      const { token: newToken, user: newUser } = response.data
+      const respData = response.data
 
-      token.value = newToken
-      user.value = newUser
+      token.value = respData.access_token
+      user.value = respData.user
 
-      localStorage.setItem('token', newToken)
-      localStorage.setItem('user', JSON.stringify(newUser))
+      localStorage.setItem('token', respData.access_token)
+      localStorage.setItem('user', JSON.stringify(respData.user))
 
-      return response.data
+      return respData
     } catch (err: any) {
-      error.value = err.response?.data?.message || 'Registration failed'
+      error.value = err.response?.data?.error || 'Registration failed'
       throw error.value
     } finally {
       loading.value = false
@@ -88,7 +88,7 @@ export const useAuthStore = defineStore('auth', () => {
       localStorage.setItem('user', JSON.stringify(response.data))
       return response.data
     } catch (err: any) {
-      error.value = err.response?.data?.message || 'Update failed'
+      error.value = err.response?.data?.error || 'Update failed'
       throw error.value
     } finally {
       loading.value = false

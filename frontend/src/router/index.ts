@@ -31,9 +31,21 @@ const routes: RouteRecordRaw[] = [
     meta: { requiresAuth: true }
   },
   {
-    path: '/kanban/:projectId',
+    path: '/kanban/:projectId?',
     name: 'KanbanBoard',
     component: () => import('@/views/KanbanBoard.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/eisenhower',
+    name: 'EisenhowerMatrix',
+    component: () => import('@/views/EisenhowerMatrix.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/focus',
+    name: 'FocusMode',
+    component: () => import('@/views/FocusMode.vue'),
     meta: { requiresAuth: true }
   },
   {
@@ -58,6 +70,12 @@ const routes: RouteRecordRaw[] = [
     path: '/settings',
     name: 'Settings',
     component: () => import('@/views/Settings.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/integrations/github',
+    name: 'GithubIntegration',
+    component: () => import('@/views/GithubIntegration.vue'),
     meta: { requiresAuth: true }
   }
 ]

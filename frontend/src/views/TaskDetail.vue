@@ -1,8 +1,8 @@
 <template>
   <div class="task-detail" v-if="task">
     <div class="task-detail-header">
+      <button class="btn btn-ghost" @click="goBack">&larr; Back</button>
       <h1>{{ task.title }}</h1>
-      <button class="btn btn-ghost" @click="goBack">← Back</button>
     </div>
 
     <div class="task-detail-grid">
@@ -15,16 +15,56 @@
           <div v-else class="empty-text">No description</div>
         </div>
 
+        <!-- Subtasks -->
+        <div class="task-section">
+          <div class="section-header">
+            <h2>Subtasks</h2>
+            <button class="btn btn-ghost btn-sm" @click="showAddSubtask = !showAddSubtask">+ Add</button>
+          </div>
+
+          <div v-if="showAddSubtask" class="add-subtask-form">
+            <input
+              v-model="newSubtaskTitle"
+              type="text"
+              placeholder="Subtask title"
+              @keyup.enter="addSubtask"
+              autofocus
+            />
+            <button class="btn btn-primary btn-sm" @click="addSubtask" :disabled="!newSubtaskTitle.trim()">Add</button>
+          </div>
+
+          <div class="subtask-list" v-if="subtasks.length > 0">
+            <div v-for="st in subtasks" :key="st.id" class="subtask-item">
+              <input type="checkbox" :checked="st.done" @change="toggleSubtask(st)" />
+              <span :class="{ done: st.done }">{{ st.title }}</span>
+            </div>
+          </div>
+          <div v-else class="empty-text">No subtasks</div>
+        </div>
+
+        <!-- Time Tracking Entries -->
+        <div class="task-section">
+          <h2>Time Entries</h2>
+          <div class="time-entries" v-if="timeEntries.length > 0">
+            <div v-for="entry in timeEntries" :key="entry.id" class="time-entry">
+              <span>{{ formatDuration(entry.duration) }}</span>
+              <span class="text-xs text-tertiary">{{ entry.comment || 'No note' }}</span>
+              <span class="text-xs text-tertiary">{{ formatDateTime(entry.start) }}</span>
+            </div>
+          </div>
+          <div v-else class="empty-text">No time entries</div>
+        </div>
+
         <div class="task-section">
           <h2>Activity</h2>
           <div class="activity-list">
             <div class="activity-item">
-              <span class="activity-label">Created at</span>
-              <span class="activity-value">{{ formatDate(task.createdAt) }}</span>
+              <span class="activity-label">Created</span>
+              <span class="activity-value">{{ formatDateTime(task.created) }}</span>
             </div>
             <div class="activity-item">
-              <span class="activity-label">Updated at</span>
-              <span class="activity-value">{{ formatDate(task.updatedAt) }}</span>
+              <span class="activity-label">Updated</span>
+              <span class="activity-value">{{ formatDateTime(task.updated) }}</span>
             </div>
           </div>
         </div>
@@ -33,12 +73,15 @@
       <div class="task-sidebar">
         <div class="task-card">
           <h3>Status</h3>
-          <select v-model="task.status" @change="updateTask" class="status-select">
-            <option value="todo">To Do</option>
-            <option value="in_progress">In Progress</option>
-            <option value="in_review">In Review</option>
-            <option value="done">Done</option>
-          </select>
+          <div class="status-toggle">
+            <button
+              class="btn btn-sm"
+              :class="task.done ? 'btn-success' : 'btn-secondary'"
+              @click="toggleDone"
+            >
+              {{ task.done ? 'Completed' : 'Mark Done' }}
+            </button>
+          </div>
         </div>
 
         <div class="task-card">
@@ -48,33 +91,82 @@
               v-for="p in [0, 1, 2, 3]"
               :key="p"
               class="priority-btn"
-              :class="{ active: task.priority === p }"
-              @click="updatePriority(p)"
+              :class="{ active: task.priority === p, [`p-${p}`]: true }"
+              @click="updateField('priority', p)"
             >
-              {{ priorityLabel(p) }}
+              {{ ['Low', 'Med', 'High', 'Urgent'][p] }}
             </button>
           </div>
         </div>
 
         <div class="task-card">
-          <h3>Due Date</h3>
-          <input v-model="dueDate" type="date" @change="updateDueDate" />
-        </div>
-
-        <div v-if="task.labels && task.labels.length > 0" class="task-card">
-          <h3>Labels</h3>
-          <div class="labels-list">
-            <span v-for="label in task.labels" :key="label.id" class="label-badge">
-              {{ label.name }}
-            </span>
+          <h3>Eisenhower</h3>
+          <div class="eisenhower-toggles">
+            <label class="toggle-label">
+              <input type="checkbox" :checked="task.urgency === 1" @change="updateField('urgency', task.urgency === 1 ? 0 : 1)" />
+              <span>Urgent</span>
+            </label>
+            <label class="toggle-label">
+              <input type="checkbox" :checked="task.importance === 1" @change="updateField('importance', task.importance === 1 ? 0 : 1)" />
+              <span>Important</span>
+            </label>
           </div>
         </div>
 
         <div class="task-card">
-          <h3>Time Tracked</h3>
-          <div class="time-tracked">
-            {{ formatSeconds(task.timeTracked || 0) }}
+          <h3>Due Date</h3>
+          <input :value="formattedDueDate" type="date" @change="updateDueDate($event)" />
+        </div>
+
+        <div class="task-card">
+          <h3>Estimation</h3>
+          <div class="estimate-row">
+            <div>
+              <span class="text-xs text-tertiary">Estimated</span>
+              <div class="estimate-value">{{ formatDuration(task.estimated_time || 0) }}</div>
+            </div>
+            <div>
+              <span class="text-xs text-tertiary">Actual</span>
+              <div class="estimate-value">{{ formatDuration(task.total_time_spent || 0) }}</div>
+            </div>
           </div>
+          <div class="estimate-input">
+            <input
+              v-model.number="estimateMinutes"
+              type="number"
+              min="0"
+              placeholder="Minutes"
+              class="estimate-field"
+            />
+            <button class="btn btn-sm btn-ghost" @click="saveEstimate">Set</button>
+          </div>
+        </div>
+
+        <div class="task-card">
+          <h3>Time Tracking</h3>
+          <div class="tracking-controls">
+            <button
+              v-if="!timeTrackingStore.isTracking || timeTrackingStore.currentTaskId !== task.id"
+              class="btn btn-primary btn-sm"
+              @click="startTracking"
+            >
+              Start Timer
+            </button>
+            <div v-else class="active-timer">
+              <span class="timer-display">{{ timeTrackingStore.formattedTime }}</span>
+              <button class="btn btn-danger btn-sm" @click="stopTracking">Stop</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="task-card">
+          <h3>Pomodoro</h3>
+          <button
+            class="btn btn-secondary btn-sm"
+            @click="startFocus"
+          >
+            Start Focus Session
+          </button>
         </div>
 
         <div class="task-actions">
@@ -93,43 +185,101 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useTasksStore } from '@/stores/tasks'
-import { formatDate, formatSeconds } from '@/utils/format'
-import type { Task } from '@/types/models'
+import { useTimeTrackingStore } from '@/stores/timeTracking'
+import { tasksAPI } from '@/api/tasks'
+import type { Task, TimeTrackingEntry } from '@/types/models'
 
 const route = useRoute()
 const router = useRouter()
 const tasksStore = useTasksStore()
+const timeTrackingStore = useTimeTrackingStore()
 
 const task = ref<Task | null>(null)
-const dueDate = computed({
-  get: () => task.value?.dueDate ? new Date(task.value.dueDate).toISOString().split('T')[0] : '',
-  set: (val: string) => {
-    if (task.value) {
-      task.value.dueDate = val ? new Date(val) : undefined
-    }
-  }
+const subtasks = ref<Task[]>([])
+const timeEntries = ref<TimeTrackingEntry[]>([])
+const showAddSubtask = ref(false)
+const newSubtaskTitle = ref('')
+const estimateMinutes = ref(0)
+
+const formattedDueDate = computed(() => {
+  if (!task.value?.due_date) return ''
+  return new Date(task.value.due_date).toISOString().split('T')[0]
 })
 
 onMounted(async () => {
-  const taskId = route.params.id as string
-  await tasksStore.fetchById(taskId)
-  task.value = tasksStore.selectedTask
+  const taskId = Number(route.params.id)
+  const result = await tasksStore.fetchById(taskId)
+  if (result) {
+    task.value = result.task
+    subtasks.value = result.subtasks || []
+    estimateMinutes.value = Math.floor((task.value.estimated_time || 0) / 60)
+  }
+
+  // Fetch time entries
+  try {
+    const resp = await tasksAPI.getTimeTracking(taskId)
+    timeEntries.value = resp.data
+  } catch {
+    timeEntries.value = []
+  }
 })
 
-const updateTask = async () => {
+const updateField = async (field: string, value: any) => {
   if (!task.value) return
-  await tasksStore.update(task.value.id, task.value)
+  ;(task.value as any)[field] = value
+  await tasksStore.update(task.value.id, { [field]: value } as any)
 }
 
-const updatePriority = async (priority: number) => {
+const toggleDone = async () => {
   if (!task.value) return
-  task.value.priority = priority
-  await updateTask()
+  task.value.done = !task.value.done
+  await tasksStore.update(task.value.id, { done: task.value.done })
 }
 
-const updateDueDate = async () => {
+const updateDueDate = async (event: Event) => {
   if (!task.value) return
-  await updateTask()
+  const val = (event.target as HTMLInputElement).value
+  task.value.due_date = val || undefined
+  await tasksStore.update(task.value.id, { due_date: val || undefined } as any)
+}
+
+const saveEstimate = async () => {
+  if (!task.value) return
+  const seconds = estimateMinutes.value * 60
+  task.value.estimated_time = seconds
+  await tasksStore.update(task.value.id, { estimated_time: seconds })
+}
+
+const addSubtask = async () => {
+  if (!task.value || !newSubtaskTitle.value.trim()) return
+  try {
+    const resp = await tasksAPI.createSubtask(task.value.id, {
+      title: newSubtaskTitle.value.trim()
+    })
+    subtasks.value.push(resp.data)
+    newSubtaskTitle.value = ''
+  } catch {
+    // error
+  }
+}
+
+const toggleSubtask = async (st: Task) => {
+  await tasksStore.update(st.id, { done: !st.done })
+  st.done = !st.done
+}
+
+const startTracking = () => {
+  if (task.value) {
+    timeTrackingStore.startTracking(task.value.id)
+  }
+}
+
+const stopTracking = async () => {
+  await timeTrackingStore.stopTracking()
+}
+
+const startFocus = () => {
+  router.push('/focus')
 }
 
 const deleteTask = async () => {
@@ -144,9 +294,21 @@ const goBack = () => {
   router.back()
 }
 
-const priorityLabel = (p: number) => {
-  const labels = ['Low', 'Medium', 'High', 'Urgent']
-  return labels[p] || 'Unknown'
+const formatDuration = (seconds: number) => {
+  if (!seconds) return '0m'
+  const mins = Math.floor(seconds / 60)
+  if (mins < 60) return `${mins}m`
+  const hrs = Math.floor(mins / 60)
+  const remainMins = mins % 60
+  return remainMins > 0 ? `${hrs}h ${remainMins}m` : `${hrs}h`
+}
+
+const formatDateTime = (dateStr: string) => {
+  if (!dateStr) return 'N/A'
+  return new Date(dateStr).toLocaleDateString('en-US', {
+    month: 'short', day: 'numeric', year: 'numeric',
+    hour: '2-digit', minute: '2-digit'
+  })
 }
 </script>
 
@@ -158,13 +320,11 @@ const priorityLabel = (p: number) => {
 
 .task-detail-header {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  margin-bottom: var(--spacing-2xl);
+  gap: var(--spacing-md);
+  margin-bottom: var(--spacing-xl);
 
-  h1 {
-    margin: 0;
-  }
+  h1 { margin: 0; flex: 1; }
 }
 
 .task-detail-grid {
@@ -176,7 +336,7 @@ const priorityLabel = (p: number) => {
 .task-content {
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-xl);
+  gap: var(--spacing-lg);
 }
 
 .task-section {
@@ -185,9 +345,16 @@ const priorityLabel = (p: number) => {
   border-radius: var(--radius-lg);
   padding: var(--spacing-lg);
 
-  h2 {
-    margin-bottom: var(--spacing-md);
-  }
+  h2 { margin-bottom: var(--spacing-md); font-size: var(--font-size-base); }
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--spacing-md);
+
+  h2 { margin: 0; }
 }
 
 .task-description {
@@ -201,35 +368,68 @@ const priorityLabel = (p: number) => {
   font-size: var(--font-size-sm);
 }
 
+.add-subtask-form {
+  display: flex;
+  gap: var(--spacing-sm);
+  margin-bottom: var(--spacing-md);
+
+  input { flex: 1; }
+}
+
+.subtask-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+.subtask-item {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-xs) 0;
+  font-size: var(--font-size-sm);
+
+  .done { text-decoration: line-through; color: var(--text-tertiary); }
+}
+
+.time-entries {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+.time-entry {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--spacing-sm);
+  background: var(--bg-secondary);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-sm);
+}
+
 .activity-list {
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-md);
+  gap: var(--spacing-sm);
 }
 
 .activity-item {
   display: flex;
   justify-content: space-between;
-  align-items: center;
   padding: var(--spacing-sm);
-  background-color: var(--bg-secondary);
+  background: var(--bg-secondary);
   border-radius: var(--radius-md);
+  font-size: var(--font-size-sm);
 }
 
-.activity-label {
-  font-size: var(--font-size-sm);
-  color: var(--text-secondary);
-}
-
-.activity-value {
-  font-size: var(--font-size-sm);
-  font-weight: 500;
-}
+.activity-label { color: var(--text-secondary); }
+.activity-value { font-weight: 500; }
 
 .task-sidebar {
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-lg);
+  gap: var(--spacing-md);
 }
 
 .task-card {
@@ -239,73 +439,94 @@ const priorityLabel = (p: number) => {
   padding: var(--spacing-md);
 
   h3 {
-    font-size: var(--font-size-sm);
+    font-size: var(--font-size-xs);
     margin-bottom: var(--spacing-sm);
     text-transform: uppercase;
     color: var(--text-tertiary);
+    letter-spacing: 0.5px;
   }
-}
 
-.status-select {
-  width: 100%;
-  padding: var(--spacing-sm);
-  border-radius: var(--radius-md);
-  border: 1px solid var(--border-color);
+  input[type="date"] { width: 100%; }
 }
 
 .priority-buttons {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: var(--spacing-sm);
+  gap: var(--spacing-xs);
 }
 
 .priority-btn {
-  padding: var(--spacing-sm);
+  padding: var(--spacing-xs) var(--spacing-sm);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-md);
-  background-color: var(--bg-secondary);
+  background: var(--bg-secondary);
   cursor: pointer;
-  transition: all var(--transition-fast);
   font-size: var(--font-size-xs);
   font-weight: 500;
+  transition: all var(--transition-fast);
 
-  &.active {
-    background-color: var(--color-primary);
-    color: white;
-    border-color: var(--color-primary);
-  }
-
-  &:hover {
-    border-color: var(--color-primary);
-  }
+  &.active { background: var(--color-primary); color: white; border-color: var(--color-primary); }
+  &:hover:not(.active) { border-color: var(--color-primary); }
 }
 
-.time-tracked {
-  font-size: var(--font-size-lg);
-  font-weight: 600;
-  color: var(--color-primary);
-}
-
-.labels-list {
+.eisenhower-toggles {
   display: flex;
   flex-direction: column;
   gap: var(--spacing-sm);
 }
 
-.label-badge {
-  display: inline-flex;
+.toggle-label {
+  display: flex;
   align-items: center;
-  padding: var(--spacing-xs) var(--spacing-sm);
-  background-color: var(--color-primary);
-  color: white;
-  border-radius: var(--radius-sm);
-  font-size: var(--font-size-xs);
+  gap: var(--spacing-sm);
+  font-size: var(--font-size-sm);
+  cursor: pointer;
+}
+
+.estimate-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--spacing-md);
+  margin-bottom: var(--spacing-sm);
+}
+
+.estimate-value {
+  font-size: var(--font-size-lg);
   font-weight: 600;
-  width: fit-content;
+  color: var(--color-primary);
+}
+
+.estimate-input {
+  display: flex;
+  gap: var(--spacing-sm);
+
+  .estimate-field {
+    flex: 1;
+    padding: var(--spacing-xs) var(--spacing-sm);
+  }
+}
+
+.tracking-controls {
+  display: flex;
+  align-items: center;
+}
+
+.active-timer {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  width: 100%;
+}
+
+.timer-display {
+  font-family: monospace;
+  font-weight: 600;
+  font-size: var(--font-size-lg);
+  color: var(--color-error);
+  flex: 1;
 }
 
 .task-actions {
-  margin-top: auto;
   padding-top: var(--spacing-md);
   border-top: 1px solid var(--border-color);
 }
@@ -317,8 +538,6 @@ const priorityLabel = (p: number) => {
 }
 
 @media (max-width: 768px) {
-  .task-detail-grid {
-    grid-template-columns: 1fr;
-  }
+  .task-detail-grid { grid-template-columns: 1fr; }
 }
 </style>

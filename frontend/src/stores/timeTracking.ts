@@ -6,11 +6,12 @@ import type { TimeTrackingEntry } from '@/types/models'
 export const useTimeTrackingStore = defineStore('timeTracking', () => {
   const entries = ref<TimeTrackingEntry[]>([])
   const currentEntry = ref<TimeTrackingEntry | null>(null)
+  const currentTaskId = ref<number | null>(null)
   const loading = ref(false)
   const error = ref<string | null>(null)
   const elapsedSeconds = ref(0)
 
-  let timerInterval: NodeJS.Timeout | null = null
+  let timerInterval: ReturnType<typeof setInterval> | null = null
 
   const isTracking = computed(() => !!currentEntry.value)
 
@@ -23,21 +24,14 @@ export const useTimeTrackingStore = defineStore('timeTracking', () => {
     return `${pad(hours)}:${pad(minutes)}:${pad(seconds)}`
   })
 
-  const totalTimeTrackedForTask = computed(() => {
-    return (taskId: string) => {
-      return entries.value
-        .filter(e => e.taskId === taskId)
-        .reduce((sum, e) => sum + e.duration, 0)
-    }
-  })
-
-  const startTracking = async (taskId: string) => {
+  const startTracking = async (taskId: number) => {
     loading.value = true
     error.value = null
 
     try {
       const response = await timeTrackingAPI.startTracking(taskId)
       currentEntry.value = response.data
+      currentTaskId.value = taskId
       elapsedSeconds.value = 0
 
       if (timerInterval) clearInterval(timerInterval)
@@ -47,14 +41,16 @@ export const useTimeTrackingStore = defineStore('timeTracking', () => {
 
       return response.data
     } catch (err: any) {
-      error.value = err.response?.data?.message || 'Failed to start tracking'
+      error.value = err.response?.data?.error || 'Failed to start tracking'
       throw error.value
     } finally {
       loading.value = false
     }
   }
 
-  const stopTracking = async (entryId: string) => {
+  const stopTracking = async () => {
+    if (!currentEntry.value) return
+
     loading.value = true
     error.value = null
 
@@ -64,74 +60,35 @@ export const useTimeTrackingStore = defineStore('timeTracking', () => {
     }
 
     try {
-      const response = await timeTrackingAPI.stopTracking(entryId)
-      const index = entries.value.findIndex(e => e.id === entryId)
-      if (index > -1) {
-        entries.value[index] = response.data
-      } else {
-        entries.value.push(response.data)
-      }
+      const response = await timeTrackingAPI.stopTracking(currentEntry.value.id, elapsedSeconds.value)
+      entries.value.unshift(response.data)
       currentEntry.value = null
+      currentTaskId.value = null
       elapsedSeconds.value = 0
       return response.data
     } catch (err: any) {
-      error.value = err.response?.data?.message || 'Failed to stop tracking'
+      error.value = err.response?.data?.error || 'Failed to stop tracking'
       throw error.value
     } finally {
       loading.value = false
     }
   }
 
-  const fetchEntries = async (filters?: { taskId?: string; userId?: string }) => {
+  const fetchEntries = async (taskId: number) => {
     loading.value = true
     error.value = null
 
     try {
-      const response = await timeTrackingAPI.getEntries(filters)
+      const response = await timeTrackingAPI.getEntries(taskId)
       entries.value = response.data
     } catch (err: any) {
-      error.value = err.response?.data?.message || 'Failed to fetch entries'
+      error.value = err.response?.data?.error || 'Failed to fetch entries'
     } finally {
       loading.value = false
     }
   }
 
-  const createEntry = async (entry: Partial<TimeTrackingEntry>) => {
-    loading.value = true
-    error.value = null
-
-    try {
-      const response = await timeTrackingAPI.createEntry(entry)
-      entries.value.push(response.data)
-      return response.data
-    } catch (err: any) {
-      error.value = err.response?.data?.message || 'Failed to create entry'
-      throw error.value
-    } finally {
-      loading.value = false
-    }
-  }
-
-  const updateEntry = async (id: string, entry: Partial<TimeTrackingEntry>) => {
-    loading.value = true
-    error.value = null
-
-    try {
-      const response = await timeTrackingAPI.updateEntry(id, entry)
-      const index = entries.value.findIndex(e => e.id === id)
-      if (index > -1) {
-        entries.value[index] = response.data
-      }
-      return response.data
-    } catch (err: any) {
-      error.value = err.response?.data?.message || 'Failed to update entry'
-      throw error.value
-    } finally {
-      loading.value = false
-    }
-  }
-
-  const deleteEntry = async (id: string) => {
+  const deleteEntry = async (id: number) => {
     loading.value = true
     error.value = null
 
@@ -139,46 +96,25 @@ export const useTimeTrackingStore = defineStore('timeTracking', () => {
       await timeTrackingAPI.deleteEntry(id)
       entries.value = entries.value.filter(e => e.id !== id)
     } catch (err: any) {
-      error.value = err.response?.data?.message || 'Failed to delete entry'
+      error.value = err.response?.data?.error || 'Failed to delete entry'
       throw error.value
     } finally {
       loading.value = false
     }
   }
 
-  const getCurrentTimer = async () => {
-    try {
-      const response = await timeTrackingAPI.getCurrentTimer()
-      if (response.data) {
-        currentEntry.value = response.data
-        elapsedSeconds.value = 0
-
-        if (timerInterval) clearInterval(timerInterval)
-        timerInterval = setInterval(() => {
-          elapsedSeconds.value++
-        }, 1000)
-      }
-      return response.data
-    } catch (err: any) {
-      error.value = err.response?.data?.message || 'Failed to get current timer'
-    }
-  }
-
   return {
     entries,
     currentEntry,
+    currentTaskId,
     loading,
     error,
     elapsedSeconds,
     isTracking,
     formattedTime,
-    totalTimeTrackedForTask,
     startTracking,
     stopTracking,
     fetchEntries,
-    createEntry,
-    updateEntry,
-    deleteEntry,
-    getCurrentTimer
+    deleteEntry
   }
 })

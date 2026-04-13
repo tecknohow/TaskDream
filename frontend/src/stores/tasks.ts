@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import { tasksAPI } from '@/api/tasks'
-import type { Task, TaskStatus } from '@/types/models'
+import { tasksAPI, type TaskFilters } from '@/api/tasks'
+import type { Task } from '@/types/models'
 
 export const useTasksStore = defineStore('tasks', () => {
   const tasks = ref<Task[]>([])
@@ -10,33 +10,41 @@ export const useTasksStore = defineStore('tasks', () => {
   const selectedTask = ref<Task | null>(null)
 
   const tasksByProject = computed(() => {
-    return (projectId: string) => tasks.value.filter(t => t.projectId === projectId)
-  })
-
-  const tasksByStatus = computed(() => {
-    return (status: TaskStatus) => tasks.value.filter(t => t.status === status)
+    return (projectId: number) => tasks.value.filter(t => t.project_id === projectId)
   })
 
   const tasksByBucket = computed(() => {
-    return (bucketId: string) => tasks.value.filter(t => t.bucketId === bucketId)
+    return (bucketId: number) => tasks.value.filter(t => t.bucket_id === bucketId)
   })
 
   const overdueTasks = computed(() => {
-    return tasks.value.filter(t => t.dueDate && new Date(t.dueDate) < new Date() && t.status !== 'done')
+    return tasks.value.filter(t => t.due_date && new Date(t.due_date) < new Date() && !t.done)
   })
 
   const todayTasks = computed(() => {
     const today = new Date()
     today.setHours(0, 0, 0, 0)
+    const tomorrow = new Date(today)
+    tomorrow.setDate(tomorrow.getDate() + 1)
     return tasks.value.filter(t => {
-      if (!t.dueDate) return false
-      const dueDate = new Date(t.dueDate)
-      dueDate.setHours(0, 0, 0, 0)
-      return dueDate.getTime() === today.getTime()
+      if (!t.due_date) return false
+      const d = new Date(t.due_date)
+      return d >= today && d < tomorrow
     })
   })
 
-  const fetchAll = async (filters?: { projectId?: string; status?: string }) => {
+  const doneTasks = computed(() => tasks.value.filter(t => t.done))
+  const openTasks = computed(() => tasks.value.filter(t => !t.done))
+
+  // Eisenhower matrix quadrants
+  const eisenhowerQuadrants = computed(() => ({
+    urgentImportant: tasks.value.filter(t => !t.done && t.urgency === 1 && t.importance === 1),
+    notUrgentImportant: tasks.value.filter(t => !t.done && t.urgency === 0 && t.importance === 1),
+    urgentNotImportant: tasks.value.filter(t => !t.done && t.urgency === 1 && t.importance === 0),
+    notUrgentNotImportant: tasks.value.filter(t => !t.done && t.urgency === 0 && t.importance === 0),
+  }))
+
+  const fetchAll = async (filters?: TaskFilters) => {
     loading.value = true
     error.value = null
 
@@ -44,28 +52,29 @@ export const useTasksStore = defineStore('tasks', () => {
       const response = await tasksAPI.getAll(filters)
       tasks.value = response.data
     } catch (err: any) {
-      error.value = err.response?.data?.message || 'Failed to fetch tasks'
+      error.value = err.response?.data?.error || 'Failed to fetch tasks'
     } finally {
       loading.value = false
     }
   }
 
-  const fetchById = async (id: string) => {
+  const fetchById = async (id: number) => {
     loading.value = true
     error.value = null
 
     try {
       const response = await tasksAPI.getById(id)
+      const taskData = response.data.task
       const index = tasks.value.findIndex(t => t.id === id)
       if (index > -1) {
-        tasks.value[index] = response.data
+        tasks.value[index] = taskData
       } else {
-        tasks.value.push(response.data)
+        tasks.value.push(taskData)
       }
-      selectedTask.value = response.data
+      selectedTask.value = taskData
       return response.data
     } catch (err: any) {
-      error.value = err.response?.data?.message || 'Failed to fetch task'
+      error.value = err.response?.data?.error || 'Failed to fetch task'
     } finally {
       loading.value = false
     }
@@ -80,14 +89,14 @@ export const useTasksStore = defineStore('tasks', () => {
       tasks.value.push(response.data)
       return response.data
     } catch (err: any) {
-      error.value = err.response?.data?.message || 'Failed to create task'
+      error.value = err.response?.data?.error || 'Failed to create task'
       throw error.value
     } finally {
       loading.value = false
     }
   }
 
-  const update = async (id: string, task: Partial<Task>) => {
+  const update = async (id: number, task: Partial<Task>) => {
     loading.value = true
     error.value = null
 
@@ -102,32 +111,21 @@ export const useTasksStore = defineStore('tasks', () => {
       }
       return response.data
     } catch (err: any) {
-      error.value = err.response?.data?.message || 'Failed to update task'
+      error.value = err.response?.data?.error || 'Failed to update task'
       throw error.value
     } finally {
       loading.value = false
     }
   }
 
-  const updateStatus = async (id: string, status: string) => {
-    return update(id, { status: status as TaskStatus })
-  }
-
-  const updateOrder = async (id: string, order: number, bucketId?: string) => {
-    try {
-      const response = await tasksAPI.updateOrder(id, order, bucketId)
-      const index = tasks.value.findIndex(t => t.id === id)
-      if (index > -1) {
-        tasks.value[index] = response.data
-      }
-      return response.data
-    } catch (err: any) {
-      error.value = err.response?.data?.message || 'Failed to update task order'
-      throw error.value
+  const toggleDone = async (id: number) => {
+    const task = tasks.value.find(t => t.id === id)
+    if (task) {
+      return update(id, { done: !task.done })
     }
   }
 
-  const deleteTask = async (id: string) => {
+  const deleteTask = async (id: number) => {
     loading.value = true
     error.value = null
 
@@ -138,7 +136,7 @@ export const useTasksStore = defineStore('tasks', () => {
         selectedTask.value = null
       }
     } catch (err: any) {
-      error.value = err.response?.data?.message || 'Failed to delete task'
+      error.value = err.response?.data?.error || 'Failed to delete task'
       throw error.value
     } finally {
       loading.value = false
@@ -155,16 +153,17 @@ export const useTasksStore = defineStore('tasks', () => {
     loading,
     error,
     tasksByProject,
-    tasksByStatus,
     tasksByBucket,
     overdueTasks,
     todayTasks,
+    doneTasks,
+    openTasks,
+    eisenhowerQuadrants,
     fetchAll,
     fetchById,
     create,
     update,
-    updateStatus,
-    updateOrder,
+    toggleDone,
     deleteTask,
     selectTask
   }

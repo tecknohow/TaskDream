@@ -45,6 +45,10 @@ func SetupRoutes(e *echo.Echo) {
 	api.PUT("/tasks/:id", v1.UpdateTask)
 	api.DELETE("/tasks/:id", v1.DeleteTask)
 
+	// Subtask routes
+	api.GET("/tasks/:id/subtasks", v1.ListSubtasks)
+	api.POST("/tasks/:id/subtasks", v1.CreateSubtask)
+
 	// Task comment routes
 	api.GET("/tasks/:id/comments", v1.ListTaskComments)
 	api.POST("/tasks/:id/comments", v1.CreateTaskComment)
@@ -82,4 +86,27 @@ func SetupRoutes(e *echo.Echo) {
 	api.GET("/notes/:id", v1.GetNote)
 	api.PUT("/notes/:id", v1.UpdateNote)
 	api.DELETE("/notes/:id", v1.DeleteNote)
+
+	// Pomodoro routes
+	api.GET("/pomodoro/sessions", v1.ListPomodoroSessions)
+	api.POST("/pomodoro/start", v1.StartPomodoro)
+	api.POST("/pomodoro/:id/complete", v1.CompletePomodoro)
+	api.POST("/pomodoro/:id/cancel", v1.CancelPomodoro)
+	api.GET("/pomodoro/settings", v1.GetPomodoroSettings)
+	api.PUT("/pomodoro/settings", v1.UpdatePomodoroSettings)
+	api.GET("/pomodoro/stats", v1.GetPomodoroStats)
+
+	// Search routes
+	api.GET("/search", v1.SearchTasks)
+
+	// Analytics routes
+	api.GET("/analytics/dashboard", v1.GetDashboardStats)
+	api.GET("/analytics/trend", v1.GetProductivityTrend)
+
+	// GitHub integration routes
+	api.GET("/integrations/github", v1.GetGithubIntegration)
+	api.POST("/integrations/github", v1.SaveGithubIntegration)
+	api.DELETE("/integrations/github", v1.DeleteGithubIntegration)
+	api.PUT("/integrations/github/repos", v1.UpdateGithubRepos)
+	api.GET("/integrations/github/issues", v1.ListGithubIssueSyncs)
 }

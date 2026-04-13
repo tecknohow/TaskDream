@@ -22,6 +22,12 @@ func RunMigrations(engine *xorm.Engine) error {
 		&models.TaskRelation{},
 		&models.TimeTracking{},
 		&models.Note{},
+		&models.PomodoroSession{},
+		&models.PomodoroSettings{},
+		&models.GithubIntegration{},
+		&models.GithubIssueSync{},
+		&models.ActivityLog{},
+		&models.DailySummary{},
 	}
 
 	for _, table := range tables {

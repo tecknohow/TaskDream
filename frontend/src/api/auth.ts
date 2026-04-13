@@ -16,11 +16,11 @@ export const authAPI = {
   },
 
   getCurrentUser: () => {
-    return client.get<User>('/auth/me')
+    return client.get<User>('/users/me')
   },
 
   updateProfile: (user: Partial<User>) => {
-    return client.put<User>('/auth/profile', user)
+    return client.put<User>('/users/me', user)
   },
 
   changePassword: (oldPassword: string, newPassword: string) => {

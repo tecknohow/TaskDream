@@ -1,7 +1,7 @@
 import axios, { AxiosInstance, InternalAxiosRequestConfig } from 'axios'
 
 const client: AxiosInstance = axios.create({
-  baseURL: '/api',
+  baseURL: '/api/v1',
   headers: {
     'Content-Type': 'application/json'
   }
@@ -20,6 +20,7 @@ client.interceptors.response.use(
   (error) => {
     if (error.response?.status === 401) {
       localStorage.removeItem('token')
+      localStorage.removeItem('user')
       window.location.href = '/login'
     }
     return Promise.reject(error)

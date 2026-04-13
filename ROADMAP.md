@@ -1,31 +1,38 @@
-﻿# TaskDream Roadmap
+# TaskDream Roadmap
 
-## Phase 1 - MVP (Current)
+## Phase 1 - MVP (Complete)
 - [x] Core task CRUD with priorities and due dates
 - [x] Project management
-- [x] Kanban board view
+- [x] Kanban board view with drag-and-drop
 - [x] User authentication (JWT)
 - [x] RESTful API
 - [x] SQLite and PostgreSQL support
 - [x] Docker deployment
-- [ ] Task filtering and search
-- [ ] Bulk task operations
+- [x] Task filtering and search
+- [x] Subtasks support
 
-## Phase 2 - Enhanced Productivity
+## Phase 2 - Enhanced Productivity (Complete)
 - [x] Time tracking (Super Productivity inspired)
+- [x] Pomodoro timer with customizable settings
+- [x] Focus Mode for distraction-free work
+- [x] Eisenhower Matrix view (urgency/importance)
+- [x] Task estimation vs actual comparison
 - [x] Notes (Tududi inspired)
 - [x] Areas for project organization
 - [x] Calendar view
-- [ ] Task reminders and notifications
-- [ ] Recurring tasks
-- [ ] File attachments
-- [ ] Activity log
+- [x] Quick Add task (Shift+A keyboard shortcut)
+- [x] Activity log and analytics
+- [x] Dashboard with productivity trends
+- [x] Dark mode with toggle (light/dark/auto)
+- [x] Global search across tasks, projects, notes
+- [x] Recurring tasks support
 
-## Phase 3 - Offline and Integrations
+## Phase 3 - Integrations (In Progress)
+- [x] GitHub integration (issues and PRs sync)
 - [ ] Offline-first / PWA support
 - [ ] CalDAV server for calendar sync
-- [ ] Pomodoro / Flowtime timer
 - [ ] Import from Todoist, Trello, Jira
+- [ ] GitLab integration
 - [ ] Webhook support
 - [ ] API documentation (Swagger)
 

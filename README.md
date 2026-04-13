@@ -6,18 +6,42 @@ TaskDream is a modern, feature-rich task and project management application buil
 
 ## Features
 
-- **Tasks** - Full CRUD with priorities (1-5), due dates, labels, reminders, attachments, subtasks, and relations
+### Task Management
+- **Tasks** - Full CRUD with priorities (Low/Medium/High/Urgent), due dates, labels, reminders, attachments, and relations
+- **Subtasks** - Break tasks into manageable sub-items with independent tracking
+- **Recurring Tasks** - Set tasks to repeat on schedules with cron expressions or durations
+- **Task Estimation** - Estimate task duration and compare against actual time spent
+- **Eisenhower Matrix** - Categorize tasks by urgency and importance for smart prioritization
+
+### Project Organization
 - **Projects** - Organize tasks into projects with custom colors and backgrounds
-- **Kanban Board** - Drag-and-drop board view with configurable columns/buckets
-- **Time Tracking** - Start/stop timer, log time entries, daily summaries (inspired by Super Productivity)
-- **Notes** - Rich notes attached to projects (inspired by Tududi)
-- **Areas** - Group related projects into high-level areas (inspired by Tududi)
+- **Areas** - Group related projects into high-level areas
+- **Kanban Board** - Drag-and-drop board view with configurable columns (To Do, In Progress, In Review, Done)
 - **Calendar View** - See tasks by date on a monthly calendar
+
+### Productivity
+- **Pomodoro Timer** - Built-in focus timer with customizable work/break durations, session tracking, and statistics
+- **Focus Mode** - Distraction-free view showing only the current task with timer and subtasks
+- **Time Tracking** - Start/stop timer, log time entries, daily summaries
+- **Quick Add** - Press `Shift+A` anywhere to quickly capture tasks without context switching
+- **Keyboard Shortcuts** - Keyboard-first design for power users
+
+### Analytics & Insights
+- **Dashboard** - Productivity overview with stats, trends, and estimation accuracy
+- **7-Day Trend** - Visual chart of daily task completion
+- **Estimation Accuracy** - Track how well you estimate task durations over time
+
+### Integrations
+- **GitHub** - Connect repositories to sync issues and pull requests as tasks
+- **Notes** - Rich notes attached to projects
+
+### Platform
+- **Dark Mode** - Full light/dark/auto theme support with toggle
+- **Auth** - JWT-based authentication with registration and login
+- **Search** - Global search across tasks, projects, and notes
+- **Docker** - Single-container deployment with multi-stage build
 - **Teams** - Team management with member roles
 - **Labels** - Color-coded labels for cross-project organization
-- **Dark Mode** - Full light/dark theme support
-- **Auth** - JWT-based authentication with registration and login
-- **Docker** - Single-container deployment with multi-stage build
 
 ## Tech Stack
 
@@ -26,7 +50,7 @@ TaskDream is a modern, feature-rich task and project management application buil
 | Backend | Go 1.22, Echo v4, xorm ORM |
 | Frontend | Vue 3, TypeScript, Vite, Pinia |
 | Database | SQLite (default) or PostgreSQL |
-| Styling | SCSS with CSS variables, dark mode |
+| Styling | SCSS with CSS variables, dark/light mode |
 | Build | Docker multi-stage, GitHub Actions CI |
 
 ## Quick Start
@@ -73,6 +97,13 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for the full development guide.
 ## Configuration
 
 Copy `config.example.yml` to `config.yml` and edit to your needs. Environment variables are also supported with the `TASKDREAM_` prefix (e.g., `TASKDREAM_DATABASE_TYPE=postgres`).
+
+## Keyboard Shortcuts
+
+| Shortcut | Action |
+|----------|--------|
+| `Shift + A` | Quick Add Task |
+| `Esc` | Close dialog/modal |
 
 ## Roadmap
 

@@ -6,7 +6,7 @@ export const projectsAPI = {
     return client.get<Project[]>('/projects')
   },
 
-  getById: (id: string) => {
+  getById: (id: number) => {
     return client.get<Project>(`/projects/${id}`)
   },
 
@@ -14,35 +14,27 @@ export const projectsAPI = {
     return client.post<Project>('/projects', project)
   },
 
-  update: (id: string, project: Partial<Project>) => {
+  update: (id: number, project: Partial<Project>) => {
     return client.put<Project>(`/projects/${id}`, project)
   },
 
-  delete: (id: string) => {
+  delete: (id: number) => {
     return client.delete(`/projects/${id}`)
   },
 
-  addMember: (projectId: string, userId: string) => {
-    return client.post(`/projects/${projectId}/members`, { userId })
+  getBuckets: (projectId: number) => {
+    return client.get<Bucket[]>('/buckets', { params: { project_id: projectId } })
   },
 
-  removeMember: (projectId: string, userId: string) => {
-    return client.delete(`/projects/${projectId}/members/${userId}`)
+  createBucket: (bucket: Partial<Bucket>) => {
+    return client.post<Bucket>('/buckets', bucket)
   },
 
-  getBuckets: (projectId: string) => {
-    return client.get<Bucket[]>(`/projects/${projectId}/buckets`)
+  updateBucket: (id: number, bucket: Partial<Bucket>) => {
+    return client.put<Bucket>(`/buckets/${id}`, bucket)
   },
 
-  createBucket: (projectId: string, bucket: Partial<Bucket>) => {
-    return client.post<Bucket>(`/projects/${projectId}/buckets`, bucket)
-  },
-
-  updateBucket: (projectId: string, bucketId: string, bucket: Partial<Bucket>) => {
-    return client.put<Bucket>(`/projects/${projectId}/buckets/${bucketId}`, bucket)
-  },
-
-  deleteBucket: (projectId: string, bucketId: string) => {
-    return client.delete(`/projects/${projectId}/buckets/${bucketId}`)
+  deleteBucket: (id: number) => {
+    return client.delete(`/buckets/${id}`)
   }
 }

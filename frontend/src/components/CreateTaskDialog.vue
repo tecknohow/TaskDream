@@ -1,195 +1,145 @@
 <template>
-  <div class="modal-overlay" @click.self="close">
-    <div class="modal">
-      <div class="modal-header">
-        <h2>Create New Task</h2>
-        <button class="btn btn-ghost" @click="close">✕</button>
+  <Teleport to="body">
+    <div class="modal-overlay" @click.self="$emit('close')">
+      <div class="modal">
+        <h2>Create Task</h2>
+
+        <form @submit.prevent="submit">
+          <div class="form-group">
+            <label>Title</label>
+            <input v-model="title" type="text" placeholder="Task title" required autofocus />
+          </div>
+
+          <div class="form-group">
+            <label>Description</label>
+            <textarea v-model="description" placeholder="Task description" rows="3"></textarea>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label>Project</label>
+              <select v-model.number="projectId">
+                <option :value="0">No Project</option>
+                <option
+                  v-for="project in projectsStore.activeProjects"
+                  :key="project.id"
+                  :value="project.id"
+                >
+                  {{ project.title }}
+                </option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label>Priority</label>
+              <select v-model.number="priority">
+                <option :value="0">Low</option>
+                <option :value="1">Medium</option>
+                <option :value="2">High</option>
+                <option :value="3">Urgent</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label>Due Date</label>
+              <input v-model="dueDate" type="date" />
+            </div>
+
+            <div class="form-group">
+              <label>Estimated Time (minutes)</label>
+              <input v-model.number="estimatedMinutes" type="number" min="0" placeholder="e.g. 30" />
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="toggle-label">
+                <input type="checkbox" v-model="isUrgent" />
+                Urgent (Eisenhower)
+              </label>
+            </div>
+            <div class="form-group">
+              <label class="toggle-label">
+                <input type="checkbox" v-model="isImportant" />
+                Important (Eisenhower)
+              </label>
+            </div>
+          </div>
+
+          <div class="form-actions">
+            <button type="button" class="btn btn-ghost" @click="$emit('close')">Cancel</button>
+            <button type="submit" class="btn btn-primary" :disabled="!title.trim() || loading">
+              {{ loading ? 'Creating...' : 'Create Task' }}
+            </button>
+          </div>
+        </form>
       </div>
-
-      <form @submit.prevent="createTask" class="modal-form">
-        <div class="form-group">
-          <label for="title">Task Title *</label>
-          <input
-            id="title"
-            v-model="form.title"
-            type="text"
-            placeholder="What needs to be done?"
-            required
-          />
-        </div>
-
-        <div class="form-group">
-          <label for="description">Description</label>
-          <textarea
-            id="description"
-            v-model="form.description"
-            placeholder="Add more details..."
-          ></textarea>
-        </div>
-
-        <div class="form-row">
-          <div class="form-group">
-            <label for="priority">Priority</label>
-            <select id="priority" v-model.number="form.priority">
-              <option value="0">Low</option>
-              <option value="1">Medium</option>
-              <option value="2">High</option>
-              <option value="3">Urgent</option>
-            </select>
-          </div>
-
-          <div class="form-group">
-            <label for="dueDate">Due Date</label>
-            <input
-              id="dueDate"
-              v-model="form.dueDate"
-              type="date"
-            />
-          </div>
-        </div>
-
-        <div class="form-actions">
-          <button type="button" class="btn btn-secondary" @click="close">
-            Cancel
-          </button>
-          <button type="submit" class="btn btn-primary" :disabled="loading">
-            {{ loading ? 'Creating...' : 'Create Task' }}
-          </button>
-        </div>
-
-        <div v-if="error" class="error-message">
-          {{ error }}
-        </div>
-      </form>
     </div>
-  </div>
+  </Teleport>
 </template>
 
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useTasksStore } from '@/stores/tasks'
+import { useProjectsStore } from '@/stores/projects'
 
-defineProps<{
-  projectId?: string
-}>()
-
-const emit = defineEmits<{
-  close: []
-}>()
+const emit = defineEmits(['close', 'created'])
 
 const tasksStore = useTasksStore()
+const projectsStore = useProjectsStore()
 
-const form = ref({
-  title: '',
-  description: '',
-  priority: 1,
-  dueDate: ''
-})
-
+const title = ref('')
+const description = ref('')
+const projectId = ref(0)
+const priority = ref(0)
+const dueDate = ref('')
+const estimatedMinutes = ref(0)
+const isUrgent = ref(false)
+const isImportant = ref(false)
 const loading = ref(false)
-const error = ref('')
 
-const createTask = async () => {
+const submit = async () => {
+  if (!title.value.trim()) return
   loading.value = true
-  error.value = ''
 
   try {
-    await tasksStore.create({
-      title: form.value.title,
-      description: form.value.description,
-      priority: form.value.priority,
-      dueDate: form.value.dueDate ? new Date(form.value.dueDate) : undefined,
-      status: 'todo',
-      projectId: 'default',
-      createdAt: new Date(),
-      updatedAt: new Date()
-    })
+    const task = await tasksStore.create({
+      title: title.value.trim(),
+      description: description.value,
+      project_id: projectId.value || undefined,
+      priority: priority.value,
+      urgency: isUrgent.value ? 1 : 0,
+      importance: isImportant.value ? 1 : 0,
+      due_date: dueDate.value || undefined,
+      estimated_time: estimatedMinutes.value ? estimatedMinutes.value * 60 : 0
+    } as any)
 
-    close()
-  } catch (err: any) {
-    error.value = err || 'Failed to create task'
+    emit('created', task)
+    emit('close')
+  } catch {
+    // error handled by store
   } finally {
     loading.value = false
   }
 }
-
-const close = () => {
-  form.value = { title: '', description: '', priority: 1, dueDate: '' }
-  emit('close')
-}
 </script>
 
 <style scoped lang="scss">
-.modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(0, 0, 0, 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 50;
-}
-
-.modal {
-  background-color: var(--bg-primary);
-  border-radius: var(--radius-lg);
-  padding: var(--spacing-xl);
-  box-shadow: var(--shadow-xl);
-  max-width: 500px;
-  width: 90%;
-  z-index: 51;
-}
-
-.modal-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: var(--spacing-lg);
-
-  h2 {
-    margin: 0;
-  }
-}
-
-.modal-form {
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-md);
-}
-
 .form-group {
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-sm);
+  margin-bottom: var(--spacing-md);
 
   label {
-    font-weight: 500;
+    display: block;
     font-size: var(--font-size-sm);
+    font-weight: 500;
+    color: var(--text-secondary);
+    margin-bottom: var(--spacing-xs);
   }
 
-  input,
-  textarea,
-  select {
-    padding: var(--spacing-md);
-    border: 1px solid var(--border-color);
-    border-radius: var(--radius-md);
-    font-size: var(--font-size-base);
-    background-color: var(--bg-secondary);
-    color: var(--text-primary);
-
-    &:focus {
-      outline: none;
-      border-color: var(--color-primary);
-      background-color: var(--bg-primary);
-    }
-  }
-
-  textarea {
-    resize: vertical;
-    min-height: 100px;
+  input, select, textarea {
+    width: 100%;
   }
 }
 
@@ -199,20 +149,24 @@ const close = () => {
   gap: var(--spacing-md);
 }
 
-.form-actions {
-  display: flex;
-  gap: var(--spacing-md);
-  justify-content: flex-end;
-  margin-top: var(--spacing-md);
-  border-top: 1px solid var(--border-color);
-  padding-top: var(--spacing-md);
+.toggle-label {
+  display: flex !important;
+  align-items: center;
+  gap: var(--spacing-sm);
+  cursor: pointer;
+  font-size: var(--font-size-sm);
+
+  input[type="checkbox"] {
+    width: auto;
+  }
 }
 
-.error-message {
-  padding: var(--spacing-md);
-  background-color: rgba(239, 68, 68, 0.1);
-  color: var(--color-error);
-  border-radius: var(--radius-md);
-  font-size: var(--font-size-sm);
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--spacing-md);
+  margin-top: var(--spacing-lg);
+  padding-top: var(--spacing-md);
+  border-top: 1px solid var(--border-color);
 }
 </style>
