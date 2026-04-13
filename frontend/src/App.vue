@@ -1,89 +1,108 @@
 <template>
-  <div class="app-layout" :class="{ 'dark-mode': isDarkMode }">
-    <Sidebar v-if="authStore.isAuthenticated" />
-    <main class="main-content">
-      <RouterView />
-    </main>
-    <QuickAddTask v-if="showQuickAdd" @close="showQuickAdd = false" />
-  </div>
+	<Ready>
+		<template v-if="isQuickAddMode && authStore.authUser">
+			<QuickAddOverlay />
+		</template>
+		<template v-else-if="isQuickAddMode">
+			<div class="quick-add-not-logged-in">
+				<p>{{ $t('quickActions.notLoggedIn') }}</p>
+			</div>
+		</template>
+		<template v-else>
+			<template v-if="showAuthLayout">
+				<AppHeader />
+				<ContentAuth />
+			</template>
+			<ContentLinkShare v-else-if="authStore.authLinkShare" />
+			<NoAuthWrapper
+				v-else
+				show-api-config
+			>
+				<RouterView />
+			</NoAuthWrapper>
+		</template>
+
+		<KeyboardShortcuts v-if="keyboardShortcutsActive && !isQuickAddMode" />
+
+		<Teleport to="body">
+			<AddToHomeScreen v-if="!isQuickAddMode" />
+			<UpdateNotification v-if="!isQuickAddMode" />
+			<Notification />
+			<DemoMode v-if="!isQuickAddMode" />
+		</Teleport>
+	</Ready>
 </template>
 
-<script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue'
-import { useAuthStore } from '@/stores/auth'
-import Sidebar from '@/components/Sidebar.vue'
-import QuickAddTask from '@/components/QuickAddTask.vue'
+<script lang="ts" setup>
+import {computed, watch} from 'vue'
+import {useRoute} from 'vue-router'
+import {useI18n} from 'vue-i18n'
+import isTouchDevice from 'is-touch-device'
+
+import Notification from '@/components/misc/Notification.vue'
+import UpdateNotification from '@/components/home/UpdateNotification.vue'
+import KeyboardShortcuts from '@/components/misc/keyboard-shortcuts/index.vue'
+
+import AppHeader from '@/components/home/AppHeader.vue'
+import ContentAuth from '@/components/home/ContentAuth.vue'
+import ContentLinkShare from '@/components/home/ContentLinkShare.vue'
+import NoAuthWrapper from '@/components/misc/NoAuthWrapper.vue'
+import Ready from '@/components/misc/Ready.vue'
+
+import {DEFAULT_LANGUAGE, setLanguage} from '@/i18n'
+
+import {useAuthStore} from '@/stores/auth'
+import {useBaseStore} from '@/stores/base'
+
+import {useColorScheme} from '@/composables/useColorScheme'
+import {useBodyClass} from '@/composables/useBodyClass'
+import QuickAddOverlay from '@/components/quick-actions/QuickAddOverlay.vue'
+import AddToHomeScreen from '@/components/home/AddToHomeScreen.vue'
+import DemoMode from '@/components/home/DemoMode.vue'
+import {AUTH_ROUTE_NAMES} from '@/constants/authRouteNames'
+import {useQuickAddMode} from '@/composables/useQuickAddMode'
+
+const importAccountDeleteService = () => import('@/services/accountDelete')
+import {success} from '@/message'
 
 const authStore = useAuthStore()
-const showQuickAdd = ref(false)
-const isDarkMode = ref(false)
+const baseStore = useBaseStore()
 
-onMounted(() => {
-  authStore.initializeAuth()
+const {isQuickAddMode} = useQuickAddMode()
 
-  // Load theme preference
-  const savedTheme = localStorage.getItem('theme')
-  if (savedTheme === 'dark') {
-    isDarkMode.value = true
-    document.documentElement.classList.add('dark')
-  } else if (savedTheme === 'light') {
-    isDarkMode.value = false
-    document.documentElement.classList.remove('dark')
-  } else {
-    // Auto-detect
-    isDarkMode.value = window.matchMedia('(prefers-color-scheme: dark)').matches
-    if (isDarkMode.value) {
-      document.documentElement.classList.add('dark')
-    }
-  }
-
-  // Global keyboard shortcuts
-  window.addEventListener('keydown', handleGlobalKeydown)
-})
-
-onUnmounted(() => {
-  window.removeEventListener('keydown', handleGlobalKeydown)
-})
-
-const handleGlobalKeydown = (e: KeyboardEvent) => {
-  const target = e.target as HTMLElement
-  const isInput = target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.tagName === 'SELECT'
-
-  // Shift+A: Quick add task (global)
-  if (e.shiftKey && e.key === 'A' && !e.ctrlKey && !e.metaKey && !isInput) {
-    e.preventDefault()
-    showQuickAdd.value = true
-    return
-  }
-
-  // Escape: Close quick add
-  if (e.key === 'Escape' && showQuickAdd.value) {
-    showQuickAdd.value = false
-    return
-  }
+// Make the Electron frameless window transparent
+if (isQuickAddMode) {
+	document.documentElement.style.background = 'transparent'
+	document.body.style.background = 'transparent'
 }
+
+const route = useRoute()
+
+const showAuthLayout = computed(() => authStore.authUser && typeof route.name === 'string' && !AUTH_ROUTE_NAMES.has(route.name))
+
+useBodyClass('is-touch', isTouchDevice())
+const keyboardShortcutsActive = computed(() => baseStore.keyboardShortcutsActive)
+
+const {t} = useI18n({useScope: 'global'})
+
+// setup account deletion verification
+const accountDeletionConfirm = computed(() => route.query?.accountDeletionConfirm as (string | undefined))
+watch(accountDeletionConfirm, async (accountDeletionConfirm) => {
+	if (accountDeletionConfirm === undefined) {
+		return
+	}
+
+	const AccountDeleteService = (await importAccountDeleteService()).default
+	const accountDeletionService = new AccountDeleteService()
+	await accountDeletionService.confirm(accountDeletionConfirm)
+	success({message: t('user.deletion.confirmSuccess')})
+	authStore.refreshUserInfo()
+}, { immediate: true })
+
+setLanguage(authStore.settings.language ?? DEFAULT_LANGUAGE)
+useColorScheme()
 </script>
 
-<style scoped lang="scss">
-.app-layout {
-  display: flex;
-  min-height: 100vh;
-  background-color: var(--bg-secondary);
-}
+<style src="@/styles/tailwind.css" />
 
-.main-content {
-  flex: 1;
-  overflow-y: auto;
-  padding: var(--spacing-lg);
-}
-
-@media (max-width: 768px) {
-  .app-layout {
-    flex-direction: column;
-  }
-
-  .main-content {
-    padding: var(--spacing-md);
-  }
-}
-</style>
+<style lang="scss" src="@/styles/global.scss" />

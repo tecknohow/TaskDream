@@ -6,27 +6,41 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
+stats.html
 
 node_modules
+.DS_Store
 dist
-dist-ssr
-*.local
+dist-dev
+dist-test
+coverage
+*.zip
+.vite/
+
+# Test files
+playwright-report/
+test-results/
+
+# local env files
+.env.local
+.env.*.local
 
 # Editor directories and files
-.vscode/*
-!.vscode/extensions.json
+.vscode
 .idea
-.DS_Store
 *.suo
 *.ntvs*
 *.njsproj
 *.sln
-*.sw?
+*.sw*
+!rollup.sw.js
 
-# pnpm
-pnpm-lock.yaml
 
-# Environment variables
-.env
-.env.local
-.env.*.local
+# Local Netlify folder
+.netlify
+
+# histoire
+.histoire
+package-lock.json
+# Sentry Config File
+.env.sentry-build-plugin

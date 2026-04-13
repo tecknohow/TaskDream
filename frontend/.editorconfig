@@ -3,24 +3,27 @@
 # top-most EditorConfig file
 root = true
 
-# Unix-style newlines with a newline ending every file
 [*]
+indent_style = tab
 end_of_line = lf
-insert_final_newline = true
 charset = utf-8
-trim_trailing_whitespace = true
+trim_trailing_whitespace = false
+insert_final_newline = true
 
-# 2-space indentation
-[*.{js,ts,vue,json,yaml,yml}]
+[*.vue]
+indent_style = tab
+
+[*.{yaml,yml}]
 indent_style = space
 indent_size = 2
 
-# 2-space indentation for SCSS
-[*.scss]
+[*.json]
 indent_style = space
 indent_size = 2
 
-# 4-space indentation for Python
-[*.py]
+[*.{scss,css}]
 indent_style = space
-indent_size = 4
+indent_size = 2
+
+[.nvmrc]
+insert_final_newline = false

@@ -1,122 +1,62 @@
-# TaskDream
+<img src="https://vikunja.io/images/vikunja-logo.svg" alt="" style="display: block;width: 50%;margin: 0 auto;" width="50%"/>
 
-> The dream task & project management app. Offline-first, self-hosted.
+[![Build Status](https://github.com/go-vikunja/vikunja/actions/workflows/ci.yml/badge.svg)](https://github.com/go-vikunja/vikunja/actions/workflows/ci.yml)
+[![License: AGPL-3.0-or-later](https://img.shields.io/badge/License-AGPL--3.0--or--later-blue.svg)](LICENSE)
+[![Install](https://img.shields.io/badge/download-v2.3.0-brightgreen.svg)](https://vikunja.io/docs/installing)
+[![Docker Pulls](https://img.shields.io/docker/pulls/vikunja/vikunja.svg)](https://hub.docker.com/r/vikunja/vikunja/)
+[![Swagger Docs](https://img.shields.io/badge/swagger-docs-brightgreen.svg)](https://try.vikunja.io/api/v1/docs)
+[![Go Report Card](https://goreportcard.com/badge/code.vikunja.io/api)](https://goreportcard.com/report/code.vikunja.io/api)
 
-TaskDream is a modern, feature-rich task and project management application built with **Go** and **Vue.js**. It combines the best ideas from [Vikunja](https://vikunja.io), [Super Productivity](https://super-productivity.com), and [Tududi](https://tududi.com) into one cohesive, self-hosted solution.
+# Vikunja
+
+> The Todo-app to organize your life.
+
+If Vikunja is useful to you, please consider [buying me a coffee](https://www.buymeacoffee.com/kolaente), [sponsoring me on GitHub](https://github.com/sponsors/kolaente) or buying [a sticker pack](https://vikunja.io/stickers).
+I'm also offering [a hosted version of Vikunja](https://vikunja.cloud/) if you want a hassle-free solution for yourself or your team.
+
+## Table of contents
+
+- [Security Reports](#security-reports)
+- [Features](#features)
+- [Docs](#docs)
+	- [Roadmap](#roadmap)
+- [Contributing](#contributing)
+- [License](#license)
+	- [Unsplash Images](#unsplash-images)
+
+## Security Reports
+
+If you find any security-related issues you don't want to disclose publicly, please use [the contact information on our website](https://vikunja.io/contact/#security).
 
 ## Features
 
-### Task Management
-- **Tasks** - Full CRUD with priorities (Low/Medium/High/Urgent), due dates, labels, reminders, attachments, and relations
-- **Subtasks** - Break tasks into manageable sub-items with independent tracking
-- **Recurring Tasks** - Set tasks to repeat on schedules with cron expressions or durations
-- **Task Estimation** - Estimate task duration and compare against actual time spent
-- **Eisenhower Matrix** - Categorize tasks by urgency and importance for smart prioritization
+See [the features page](https://vikunja.io/features/) on our website for a more exhaustive list or 
+try it on [try.vikunja.io](https://try.vikunja.io)!
 
-### Project Organization
-- **Projects** - Organize tasks into projects with custom colors and backgrounds
-- **Areas** - Group related projects into high-level areas
-- **Kanban Board** - Drag-and-drop board view with configurable columns (To Do, In Progress, In Review, Done)
-- **Calendar View** - See tasks by date on a monthly calendar
+## Docs
 
-### Productivity
-- **Pomodoro Timer** - Built-in focus timer with customizable work/break durations, session tracking, and statistics
-- **Focus Mode** - Distraction-free view showing only the current task with timer and subtasks
-- **Time Tracking** - Start/stop timer, log time entries, daily summaries
-- **Quick Add** - Press `Shift+A` anywhere to quickly capture tasks without context switching
-- **Keyboard Shortcuts** - Keyboard-first design for power users
+* [Installing](https://vikunja.io/docs/installing/)
+* [Build from source](https://vikunja.io/docs/build-from-sources/)
+* [Development setup](https://vikunja.io/docs/development/)
+* [Magefile](https://vikunja.io/docs/magefile/)
+* [Testing](https://vikunja.io/docs/testing/)
 
-### Analytics & Insights
-- **Dashboard** - Productivity overview with stats, trends, and estimation accuracy
-- **7-Day Trend** - Visual chart of daily task completion
-- **Estimation Accuracy** - Track how well you estimate task durations over time
+All docs can be found on [the Vikunja home page](https://vikunja.io/docs/).
 
-### Integrations
-- **GitHub** - Connect repositories to sync issues and pull requests as tasks
-- **Notes** - Rich notes attached to projects
+### Roadmap
 
-### Platform
-- **Dark Mode** - Full light/dark/auto theme support with toggle
-- **Auth** - JWT-based authentication with registration and login
-- **Search** - Global search across tasks, projects, and notes
-- **Docker** - Single-container deployment with multi-stage build
-- **Teams** - Team management with member roles
-- **Labels** - Color-coded labels for cross-project organization
+See [the roadmap](https://my.vikunja.cloud/share/QFyzYEmEYfSyQfTOmIRSwLUpkFjboaBqQCnaPmWd/auth) (hosted on Vikunja!) for more!
 
-## Tech Stack
+## Contributing
 
-| Layer | Technology |
-|-------|-----------|
-| Backend | Go 1.22, Echo v4, xorm ORM |
-| Frontend | Vue 3, TypeScript, Vite, Pinia |
-| Database | SQLite (default) or PostgreSQL |
-| Styling | SCSS with CSS variables, dark/light mode |
-| Build | Docker multi-stage, GitHub Actions CI |
-
-## Quick Start
-
-### Docker (recommended)
-
-```bash
-docker-compose up -d
-```
-
-Then open http://localhost:3456
-
-### Manual Build
-
-```bash
-# Backend
-go mod download
-go build -o taskdream .
-
-# Frontend
-cd frontend
-pnpm install
-pnpm build
-cd ..
-
-# Run
-./taskdream web
-```
-
-## Development
-
-```bash
-# Start backend (port 3456)
-go run . web
-
-# Start frontend dev server (port 5173, proxies API to backend)
-cd frontend
-pnpm install
-pnpm dev
-```
-
-See [CONTRIBUTING.md](CONTRIBUTING.md) for the full development guide.
-
-## Configuration
-
-Copy `config.example.yml` to `config.yml` and edit to your needs. Environment variables are also supported with the `TASKDREAM_` prefix (e.g., `TASKDREAM_DATABASE_TYPE=postgres`).
-
-## Keyboard Shortcuts
-
-| Shortcut | Action |
-|----------|--------|
-| `Shift + A` | Quick Add Task |
-| `Esc` | Close dialog/modal |
-
-## Roadmap
-
-See [ROADMAP.md](ROADMAP.md) for the planned development phases.
-
-## Inspiration & Credits
-
-TaskDream stands on the shoulders of these excellent open-source projects:
-
-- [Vikunja](https://github.com/go-vikunja/vikunja) - Go-based task management with a Vue frontend (AGPL-3.0)
-- [Super Productivity](https://github.com/super-productivity/super-productivity) - Time tracking and task management (MIT)
-- [Tududi](https://github.com/chrisvel/tududi) - Calm task/project/notes organizer (MIT)
+Please check out the contribution guidelines on [the website](https://vikunja.io/docs/development/).
 
 ## License
 
-TaskDream is licensed under the [GNU Affero General Public License v3.0](LICENSE).
+Most of this repository is licensed under [AGPL‑3.0‑or‑later](LICENSE).
+The contents of [`desktop/`](desktop/) are licensed under
+[GPL‑3.0‑or‑later](desktop/LICENSE).
+
+### Unsplash Images
+
+Background images from Unsplash are distributed under the [Unsplash License](https://unsplash.com/license). The license requires giving credit to the photographer and Unsplash. See [Unsplash’s terms](https://unsplash.com/terms) for more information.
