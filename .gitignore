@@ -54,3 +54,6 @@ PLAN.md
 plans/
 /.crush/
 /.playwright-mcp
+taskdream
+taskdream.db
+config.yml

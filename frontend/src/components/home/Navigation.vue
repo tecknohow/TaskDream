@@ -71,6 +71,38 @@
 						{{ $t('team.title') }}
 					</RouterLink>
 				</li>
+				<li>
+					<RouterLink
+						v-shortcut="'KeyG KeyF'"
+						:to="{ name: 'focus'}"
+					>
+						<span class="menu-item-icon icon">
+							<Icon icon="play" />
+						</span>
+						{{ $t('navigation.focusMode') }}
+					</RouterLink>
+				</li>
+				<li>
+					<RouterLink
+						v-shortcut="'KeyG KeyE'"
+						:to="{ name: 'eisenhower'}"
+					>
+						<span class="menu-item-icon icon">
+							<Icon icon="th" />
+						</span>
+						{{ $t('navigation.eisenhower') }}
+					</RouterLink>
+				</li>
+				<li>
+					<RouterLink
+						:to="{ name: 'integrations.github'}"
+					>
+						<span class="menu-item-icon icon">
+							<Icon icon="code" />
+						</span>
+						{{ $t('navigation.github') }}
+					</RouterLink>
+				</li>
 			</menu>
 		</nav>
 
